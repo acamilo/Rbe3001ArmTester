@@ -8,7 +8,8 @@ class ArmData:
     rollingavg = []
     
     tare = True
-    def __init__(self,line):
+    def __init__(self,line,tare=True):
+        self.tare = tare
         self.parseline(line)
         pass
     
@@ -44,6 +45,8 @@ class ArmData:
 
             if self.tare:
                 self.loadvalues =  [a - b for a, b in zip(load, self.tarevalues)]
+            else:
+                self.loadvalues =  load
 
         except IndexError:
             print " ERROR: Malformed Packet IE"
