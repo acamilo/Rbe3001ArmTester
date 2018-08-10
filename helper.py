@@ -8,8 +8,9 @@ class CalcAvg:
         self.avg_array = [0.0] * self.records
         
     def add(self,value):
+        value = float(value)
         self.avg = 0
-        self.avg_array = [value] + self.avg_array[1:self.records-1]
+        self.avg_array = [value] + self.avg_array[0:self.records-1]
         for v in self.avg_array:
             self.avg += v
         self.avg = self.avg/self.records
