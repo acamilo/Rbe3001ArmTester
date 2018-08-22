@@ -3,10 +3,10 @@ class ArmData:
     setpoints  = [0.0,0.0,0.0]
     gravity    = [0.0,0.0,0.0]
     loadvalues = [0.0,0.0,0.0]
-    tarevalues = None
+    tarevalues = [0.0,0.0,0.0]
     
     rollingavg = []
-    
+    valid = True
     tare = True
     def __init__(self,line,tare=True):
         self.tare = tare
@@ -43,16 +43,17 @@ class ArmData:
                     print "Tareing with %s" % load
                     self.tarevalues = load
 
-            if self.tare:
-                self.loadvalues =  [a - b for a, b in zip(load, self.tarevalues)]
-            else:
-                self.loadvalues =  load
+
+            self.loadvalues =  [a - b for a, b in zip(load, self.tarevalues)]
+
 
         except IndexError:
-            print " ERROR: Malformed Packet IE"
+            #print " ERROR: Malformed Packet IE"
+            self.valid=False
             #print line
         except ValueError:
-            print " ERROR: Malformed Packet VE"
+            #print " ERROR: Malformed Packet VE"
+            self.valid=False
             #print line
         
     def __repr__(self):
@@ -60,7 +61,6 @@ class ArmData:
         setpoints = self.setpoints
         gravity = self.gravity
         loadvalues = self.loadvalues
-        maxes = self.maxes
         
             
         e = "[%0.4f , %0.4f , %0.4f]" % (encoders[0],encoders[1],encoders[2])
