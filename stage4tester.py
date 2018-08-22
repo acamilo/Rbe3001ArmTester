@@ -8,6 +8,7 @@ import datetime
 from ArmLib import ArmData
 from helper import CalcAvg
 from tqdm import tqdm
+import os
 
 samples = 30
 
@@ -40,7 +41,6 @@ parser.add_argument('-b','--baudrate', help='Debug serial port baudrate.', defau
 parser.add_argument('-n','--namesdb', help='List of team names and numbers', default = "arm-names")
 
 args = parser.parse_args()
-
 
 
 #load arm names
@@ -84,6 +84,16 @@ while True:
   filename = '%s-%s-%s'%(RobotNumber,RobotName,datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S'))
   log = open(filename, 'w') 
   print "Logging data to %s" % (filename)
+  print
+  lab = raw_input("Would you like to print a label? [Y/N]")
+  print
+  if lab=='Y' or lab == 'y':
+    labeltext = "%s : %s" % (RobotNumber,RobotName)
+    if os.path.exists("data-64.bmp"):
+      os.remove("data-64.bmp")
+    os.system("convert -size x64 label:\"%s\" +dither -negate -monochrome label-64.bmp" % labeltext)
+    time.sleep(5)
+    os.system("python ptd600.py label-64.bmp")
 
   print
   # tRY AND OPEN A SERIAL PORT
@@ -233,13 +243,15 @@ while True:
       noise[j].append(n)
   noisemax = [max(noise[0]),max(noise[1]),max(noise[2])]
 
-  print "Heavy Avg:  %s\n" % str(heavy_avg)
-  print "Light Avg:  %s\n" % str(light_avg)
-  print "Hysteresis: %s\n" % str(hyst)
-  print "Noise PKPK: %s\n" % str(noisemax)
+  print "Heavy Avg:  %s" % str(heavy_avg)
+  print "Light Avg:  %s" % str(light_avg)
+  print "noload Avg: %s" % str(noload_avg)
+  print "Hysteresis: %s" % str(hyst)
+  print "Noise PKPK: %s" % str(noisemax)
 
   log.write("Heavy Avg:  %s\n" % str(heavy_avg))
   log.write("Light Avg:  %s\n" % str(light_avg))
+  log.write("noload Avg: %s\n" % str(noload_avg))
   log.write("Hysteresis: %s\n" % str(hyst))
   log.write("Noise PKPK: %s\n" % str(noisemax)) 
 
@@ -251,7 +263,7 @@ while True:
   for i in range(1,3):
     hw = abs(heavy_avg[i]-noload_avg[i])
     hys = abs(hyst[i])
-    if hw<50.0:
+    if hw<30.0:
       print "\tFailure for link %d. Heavy Weight measurement smaller than noise floor (%f) %f/%f" % \
         (i,hw/hys,hw,hys)
       log.write("Heavy Test: Failure for link %d. Noise Floor\n"%i)
@@ -269,7 +281,7 @@ while True:
   for i in range(1,3):
     lw = abs(light_avg[i]-noload_avg[i])
     hys = abs(hyst[i])
-    if lw<50.0:
+    if lw<30.0:
       print "\tFailure for link %d. Light Weight measurement smaller than noise floor  (%f) %f/%f"%\
               (i,lw/hys,lw,hys)
       log.write("Light Test: Failure for link %d. Hysteresis\n"%i)
@@ -296,6 +308,14 @@ while True:
     print "\tArm '%s' \033[1;32;40m Passed \033[0;37;40m Test" % robot.name
     log.write("Arm Result: FAIL.\n")    
   
+  #testdataq = raw_input( "Would you like test data printed to a label? [Y/N]")
+  #if testdataq == 'Y' or testdataq == 'y':
+  #  labeltext = "Heavy: %s\nLight: %s\nNo Load: %s\nHysteresis: %s" % (str(heavy_avg),str(light_avg),str(noload_avg),str(hyst))
+  #  if os.path.exists("data-64.bmp"):
+  #    os.remove("data-64.bmp")
+  #  os.system("convert -size x64 label:\"%s\" +dither -negate -monochrome data-64.bmp" % labeltext)
+  #  time.sleep(5)
+  #  os.system("python ptd600.py data-64.bmp")
   log.close()
 
 # Test Procedure.
